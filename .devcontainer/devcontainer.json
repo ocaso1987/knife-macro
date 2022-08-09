@@ -1,0 +1,15 @@
+{
+	"name": "knife-macro",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"remoteUser": "root",
+	"features": {},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"Swellaby.rust-pack"
+			]
+		}
+	}
+}
