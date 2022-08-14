@@ -2,7 +2,7 @@
 use std::{collections::HashMap, str::FromStr};
 
 use darling::{FromMeta, ToTokens};
-use knife_util::{render_template_recursion, serde_json::Value, ContextType, MapUtil, StringUtil};
+use knife_util::{render_template_recursion, serde_json::Value, ContextType, MapExt, StringExt};
 use quote::{format_ident, quote};
 use syn::{parse::Parser, parse_macro_input::parse, Attribute, AttributeArgs, ItemFn, ItemStruct};
 

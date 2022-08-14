@@ -5,7 +5,7 @@ use crate::base::{create_derive_attribute_from, InputInfo, MacroTrait};
 use darling::{FromMeta, ToTokens};
 use knife_util::{
     serde_json::{json, Value},
-    ContextMapUtil, ContextType, MapUtil, VecUtil,
+    ContextType, MapExt, TemplateContextExt, VecExt,
 };
 
 /// 过程宏定义参数

@@ -3,7 +3,7 @@ use crate::base::{InputInfo, MacroTrait};
 use darling::{FromMeta, ToTokens};
 use knife_util::{
     serde_json::{json, Value},
-    ContextMapUtil, ContextType, MapUtil,
+    ContextType, MapExt, TemplateContextExt,
 };
 use std::collections::HashMap;
 

@@ -8,11 +8,11 @@ version = "0.1.0"
 
 [lib]
 proc-macro = true
-test = true
 
 [dependencies]
+# knife-util = { git = "https://github.com/ocaso1987/knife-util.git", branch = "v0.1.0-dev" }
+knife-util = { git = "https://gitlab.fxexpert.cn/knife/knife-util.git", branch = "v0.1.0-dev" }
 darling = "0.14.1"
-knife-util = { git = "https://github.com/ocaso1987/knife-util.git", branch = "v0.1.0-dev" }
 proc-macro2 = "1.0.43"
 quote = "1.0.21"
 syn = { version = "1.0.99", features = ["full"] }
