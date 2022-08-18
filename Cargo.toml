@@ -4,14 +4,14 @@ edition = "2021"
 license = "Apache-2.0"
 name = "knife-macro"
 repository = "https://github.com/ocaso1987/knife-macro/"
-version = "0.1.0"
+version = "0.1.1"
 
 [lib]
 proc-macro = true
 
 [dependencies]
-# knife-util = { git = "https://github.com/ocaso1987/knife-util.git", branch = "v0.1.0-dev" }
-knife-util = { git = "https://gitlab.fxexpert.cn/knife/knife-util.git", branch = "v0.1.0-dev" }
+# knife-util = { git = "https://github.com/ocaso1987/knife-util.git", branch = "v0.1.1-dev" }
+knife-util = { git = "https://gitlab.fxexpert.cn/knife/knife-util.git", branch = "v0.1.1-dev" }
 darling = "0.14.1"
 proc-macro2 = "1.0.43"
 quote = "1.0.21"
