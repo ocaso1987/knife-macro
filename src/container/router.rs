@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use crate::base::{InputInfo, MacroTrait};
 use darling::{FromMeta, ToTokens};
 use knife_util::{
-    serde_json::{json, Value},
-    MapExt, TemplateContextExt, VecExt,
+    crates::bson::{bson, Bson},
+    ContextExt, TemplateContext, TemplateContextExt, VecExt,
 };
 
 /// 过程宏定义参数
@@ -18,17 +18,17 @@ pub(crate) struct KnifeRouterMacro {
 }
 
 impl MacroTrait for KnifeRouterMacro {
-    fn config(&self, config: &mut HashMap<String, Value>) {
+    fn config(&self, config: &mut HashMap<String, Bson>) {
         config.insert_bool("with_item_fn", true);
     }
 
-    fn init(&self, _input: &mut InputInfo, _config: &mut HashMap<String, Value>) {}
+    fn init(&self, _input: &mut InputInfo, _config: &mut HashMap<String, Bson>) {}
 
     fn load(
         &self,
-        context: &mut HashMap<String, knife_util::ContextType>,
+        context: &mut TemplateContext,
         input: &mut InputInfo,
-        _config: &mut HashMap<String, Value>,
+        _config: &mut HashMap<String, Bson>,
     ) {
         if !input.is_item_fn {
             panic!("不支持在该语法块上使用knife_router注解");
@@ -57,7 +57,7 @@ impl MacroTrait for KnifeRouterMacro {
             .unwrap()
             .attrs
             .map(|x| x.to_token_stream().to_string());
-        context.insert_value("origin_fn_attrs_quote", json!(fn_attrs));
+        context.insert_bson("origin_fn_attrs_quote", bson!(fn_attrs));
         context.insert_string(
             "origin_fn_quote",
             format!(
@@ -89,16 +89,16 @@ impl MacroTrait for KnifeRouterMacro {
             "result",
             r#"
                 {{#each origin_fn_attrs_quote}}
-                {{this}}
+                {{{this}}}
                 {{/each}}
                 {{{origin_fn_quote}}}
-                lazy_static::lazy_static! {
+                {{crate_builtin_name}}::crates::lazy_static::lazy_static! {
                     static ref {{ident}}__HOLDER_INSTANCE: {{crate_builtin_name}}::util::AnyRef = {
                         {{crate_builtin_name}}::util::AnyRef::new({{crate_builtin_name}}::get_{{scope}}::<{{ident}}__Holder>("router".to_string(),"{{name}}".to_string()).unwrap())
                     };
                 }
                 struct {{ident}}__Holder {}
-                #[{{crate_builtin_name}}::util::async_trait::async_trait]
+                #[{{crate_builtin_name}}::crates::async_trait::async_trait]
                 impl {{crate_builtin_name}}::RouterTrait for {{ident}}__Holder {
                     async fn router_handle(&self, req: {{crate_builtin_name}}::HyperRequest) -> {{crate_builtin_name}}::HyperResponse {
                         {{crate_builtin_name}}::HyperResponse::from({{ident}}({{crate_builtin_name}}::HyperRequest::into(req)).await)
@@ -109,7 +109,7 @@ impl MacroTrait for KnifeRouterMacro {
                         {{crate_builtin_name}}::Component::ROUTER(Box::new(self))
                     }
                 }
-                #[{{crate_builtin_name}}::util::ctor::ctor]
+                #[{{crate_builtin_name}}::crates::ctor::ctor]
                 fn {{ident}}__INIT() {
                     {{crate_builtin_name}}::register_{{scope}}("router".to_string(),"{{name}}".to_string(),{{ident}}__Holder {});
                 }

@@ -2,29 +2,31 @@
 use std::{collections::HashMap, str::FromStr};
 
 use darling::{FromMeta, ToTokens};
-use knife_util::{render_template_recursion, serde_json::Value, ContextType, MapExt, StringExt};
+use knife_util::{
+    crates::bson::Bson, render_template_recursion, ContextExt, StringExt, TemplateContext,
+};
 use quote::{format_ident, quote};
 use syn::{parse::Parser, parse_macro_input::parse, Attribute, AttributeArgs, ItemFn, ItemStruct};
 
 /// 宏参数处理对象
 pub(crate) trait MacroTrait {
     /// 设置初始化参数选项
-    fn config(&self, _config: &mut HashMap<String, Value>) {}
+    fn config(&self, _config: &mut HashMap<String, Bson>) {}
 
     /// 配置需要从代码中提取的内容
-    fn init(&self, _input: &mut InputInfo, _config: &mut HashMap<String, Value>) {}
+    fn init(&self, _input: &mut InputInfo, _config: &mut HashMap<String, Bson>) {}
 
     /// 初始化上下文并存入默认参数
     fn load(
         &self,
-        _context: &mut HashMap<String, ContextType>,
+        _context: &mut TemplateContext,
         _input: &mut InputInfo,
-        _config: &mut HashMap<String, Value>,
+        _config: &mut HashMap<String, Bson>,
     ) {
     }
 
     /// 往上下文中存入默认参数、解析模板与计算逻辑
-    fn process(&self, _context: &mut HashMap<String, ContextType>, _input: &mut InputInfo) {}
+    fn process(&self, _context: &mut TemplateContext, _input: &mut InputInfo) {}
 }
 
 #[derive(Default)]
@@ -74,7 +76,7 @@ pub(crate) fn create_derive_attribute_from(
 /// 设置derive宏并增加指定参数
 fn get_attr_quote(attr: &Attribute, derive_arg: &str) -> proc_macro2::TokenStream {
     let mut attr_str = attr.to_token_stream().to_string();
-    let is_match = attr_str.match_pattern(format!(r#"[^a-zA-Z0-9]{}"[^a-zA-Z0-9]"#, derive_arg));
+    let is_match = attr_str.regex_match(format!(r#"[^a-zA-Z0-9]{}"[^a-zA-Z0-9]"#, derive_arg));
     if !is_match {
         attr_str = attr_str.replace(
             "(",
@@ -125,18 +127,18 @@ where
     }
 }
 
-fn process_default(_context: &mut HashMap<String, ContextType>, _input_info: &mut InputInfo) {}
+fn process_default(_context: &mut TemplateContext, _input_info: &mut InputInfo) {}
 
 fn load_default(
-    _context: &mut HashMap<String, ContextType>,
+    _context: &mut TemplateContext,
     _input_info: &mut InputInfo,
-    _config: &mut HashMap<String, Value>,
+    _config: &mut HashMap<String, Bson>,
 ) {
 }
 
-fn init_default(_input_info: &mut InputInfo, _config: &mut HashMap<String, Value>) {}
+fn init_default(_input_info: &mut InputInfo, _config: &mut HashMap<String, Bson>) {}
 
-fn config_default(input_info: &mut InputInfo, config: &mut HashMap<String, Value>) {
+fn config_default(input_info: &mut InputInfo, config: &mut HashMap<String, Bson>) {
     let with_item_fn = config.get_bool_or("with_item_fn", false);
     if with_item_fn {
         if let Ok(v) = parse::<ItemFn>(
