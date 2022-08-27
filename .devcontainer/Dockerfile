@@ -20,4 +20,3 @@ RUN curl https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustu
 ENV PATH="/root/.cargo/bin:${PATH}"
 RUN rustup toolchain install nightly
 RUN cargo install cargo-expand cargo-cache
-RUN cargo install sccache

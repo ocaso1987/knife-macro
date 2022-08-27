@@ -9,10 +9,14 @@ pub(crate) mod container {
     pub(crate) mod component;
     pub(crate) mod router;
 }
+// pub(crate) mod crates {
+//     pub(crate) mod sqlx;
+// }
 
 use base::knife_main;
 use boot::server::KnifeServerMacro;
 use container::{component::KnifeComponentMacro, router::KnifeRouterMacro};
+// use crates::sqlx::sql_main;
 use proc_macro::TokenStream;
 
 /// 全局容器过程宏
@@ -25,9 +29,6 @@ use proc_macro::TokenStream;
 ///
 /// # Example
 /// ```ignore
-/// #[knife_component(name = "handler")]
-/// pub fn handler() {}
-///
 /// #[knife_component(name = "bean")]
 /// pub struct Bean {}
 /// ```
@@ -71,3 +72,13 @@ pub fn knife_router(attr: TokenStream, input: TokenStream) -> TokenStream {
 pub fn knife_server(attr: TokenStream, input: TokenStream) -> TokenStream {
     knife_main::<KnifeServerMacro>(attr, input)
 }
+
+// /// SQL执行语句
+// ///
+// /// # Example
+// /// sql!("select * from t_table where id = ?", id);
+// /// ```
+// #[proc_macro]
+// pub fn sql(input: TokenStream) -> TokenStream {
+//     sql_main(input)
+// }

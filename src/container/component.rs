@@ -140,7 +140,7 @@ impl MacroTrait for KnifeComponentMacro {
                         &mut holder.target
                     }
                 }
-                lazy_static::lazy_static! {
+                {{crate_builtin_name}}::crates::lazy_static::lazy_static! {
                     static ref {{ident}}__HOLDER_INSTANCE: {{crate_builtin_name}}::util::AnyRef = {
                         {{crate_builtin_name}}::util::AnyRef::new({{crate_builtin_name}}::get_{{scope}}::<{{ident}}__Holder>("component".to_string(),"{{name}}".to_string()).unwrap())
                     };
@@ -150,12 +150,12 @@ impl MacroTrait for KnifeComponentMacro {
                     inited: bool, // 缺把锁
                 }
                 impl {{ident}}__Holder {
-                    fn init(&self) {
+                    fn init(&mut self) {
                         if !self.inited {
                             {{#if init}}self.target.{{init}}();{{/if}}
                         }
                     }
-                    async fn init_async(&self) {
+                    async fn init_async(&mut self) {
                         if !self.inited {
                             {{#if async_init}}self.target.{{async_init}}().await;{{/if}}
                         }
