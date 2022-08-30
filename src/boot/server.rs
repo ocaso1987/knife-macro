@@ -5,7 +5,7 @@ use crate::base::{InputInfo, MacroTrait};
 use darling::{FromMeta, ToTokens};
 use knife_util::{
     crates::bson::{bson, Bson},
-    ContextExt, TemplateContext, TemplateContextExt,
+    ContextExt, TemplateContext, TemplateContextExt, VecExt,
 };
 
 /// 过程宏定义参数
@@ -69,7 +69,7 @@ impl MacroTrait for KnifeServerMacro {
                     });
                 }
             "#,
-            vec!["env_vars", "crate_builtin_name", "boot_type", "block_quote"],
+            vec!["env_vars", "crate_builtin_name", "boot_type", "block_quote"].map(|x|x.to_string()),
         );
         context.insert_invoker(
             "env_vars",

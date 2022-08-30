@@ -1,9 +1,9 @@
 name: knife-macro
 on:
   push:
-    branches: [ "v0.1.2-dev" ]
+    branches: [ "v0.1.3-dev" ]
   pull_request:
-    branches: [ "v0.1.2-dev" ]
+    branches: [ "v0.1.3-dev" ]
 
 env:
   CARGO_TERM_COLOR: always

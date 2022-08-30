@@ -115,7 +115,9 @@ where
     load_default(context, input_info, config);
     macro_target.process(context, input_info);
     process_default(context, input_info);
-    let result_quote = render_template_recursion(&context, "result").unwrap();
+    let result_quote = render_template_recursion(&context, "result")
+        .unwrap()
+        .0;
     let crate_dryrun = context.get_bool("crate_dryrun");
     if crate_dryrun {
         println!("-------------------------------------------------------------------------");

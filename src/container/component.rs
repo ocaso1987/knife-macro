@@ -175,7 +175,7 @@ impl MacroTrait for KnifeComponentMacro {
                     });
                 }
             "#,
-            vec!["origin_struct_attrs_quote","origin_struct_quote","ident","scope","name","generate_method","target_method","init","async_init","crate_builtin_name"],
+            vec!["origin_struct_attrs_quote","origin_struct_quote","ident","scope","name","generate_method","target_method","init","async_init","crate_builtin_name"].map(|x|x.to_string()),
         );
     }
 }

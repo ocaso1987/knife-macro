@@ -1,6 +1,6 @@
 [package]
 name = "knife-macro"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["ocaso <ocaso1987@qq.com>"]
 description = "Knife框架公共宏定义"
 repository = "https://github.com/ocaso1987/knife-macro/"
