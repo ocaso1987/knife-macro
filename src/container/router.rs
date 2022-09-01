@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use crate::base::{InputInfo, MacroTrait};
 use darling::{FromMeta, ToTokens};
 use knife_util::{
-    crates::bson::{bson, Bson},
-    ContextExt, TemplateContext, TemplateContextExt, VecExt,
+    crates::serde_json::json, ContextExt, TemplateContext, TemplateContextExt, Value,
+    ValueConvertExt, VecExt,
 };
 
 /// 过程宏定义参数
@@ -18,17 +18,17 @@ pub(crate) struct KnifeRouterMacro {
 }
 
 impl MacroTrait for KnifeRouterMacro {
-    fn config(&self, config: &mut HashMap<String, Bson>) {
+    fn config(&self, config: &mut HashMap<String, Value>) {
         config.insert_bool("with_item_fn", true);
     }
 
-    fn init(&self, _input: &mut InputInfo, _config: &mut HashMap<String, Bson>) {}
+    fn init(&self, _input: &mut InputInfo, _config: &mut HashMap<String, Value>) {}
 
     fn load(
         &self,
         context: &mut TemplateContext,
         input: &mut InputInfo,
-        _config: &mut HashMap<String, Bson>,
+        _config: &mut HashMap<String, Value>,
     ) {
         if !input.is_item_fn {
             panic!("不支持在该语法块上使用knife_router注解");
@@ -57,7 +57,7 @@ impl MacroTrait for KnifeRouterMacro {
             .unwrap()
             .attrs
             .map(|x| x.to_token_stream().to_string());
-        context.insert_bson("origin_fn_attrs_quote", bson!(fn_attrs));
+        context.insert_value("origin_fn_attrs_quote", json!(fn_attrs).as_value());
         context.insert_string(
             "origin_fn_quote",
             format!(
