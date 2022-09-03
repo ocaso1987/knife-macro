@@ -173,6 +173,7 @@ impl MacroTrait for KnifeComponentMacro {
                         target: {{ident}}::{{generate_method}}(),
                         inited: false,
                     });
+                    tracing::trace!("注册到容器:{{name}}",);
                 }
             "#,
             vec!["origin_struct_attrs_quote","origin_struct_quote","ident","scope","name","generate_method","target_method","init","async_init","crate_builtin_name"].map(|x|x.to_string()),

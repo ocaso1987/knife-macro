@@ -112,6 +112,7 @@ impl MacroTrait for KnifeRouterMacro {
                 #[{{crate_builtin_name}}::crates::ctor::ctor]
                 fn {{ident}}__INIT() {
                     {{crate_builtin_name}}::register_{{scope}}("router".to_string(),"{{name}}".to_string(),{{ident}}__Holder {});
+                    ::tracing::trace!("注册到路由:{{name}}",);
                 }
             "#,
             vec!["origin_fn_attrs_quote","origin_fn_quote","ident","scope","name","crate_builtin_name"].map(|x|x.to_string()),
