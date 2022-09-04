@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use crate::base::{InputInfo, MacroTrait};
 use darling::{FromMeta, ToTokens};
 use knife_util::{
-    crates::bson::{bson, Bson},
-    ContextExt, TemplateContext, TemplateContextExt, VecExt,
+    crates::serde_json::json, ContextExt, TemplateContext, TemplateContextExt, Value,
+    ValueConvertExt, VecExt,
 };
 
 /// 过程宏定义参数
@@ -18,17 +18,17 @@ pub(crate) struct KnifeServerMacro {
 }
 
 impl MacroTrait for KnifeServerMacro {
-    fn config(&self, config: &mut HashMap<String, Bson>) {
+    fn config(&self, config: &mut HashMap<String, Value>) {
         config.insert_bool("with_item_fn", true);
     }
 
-    fn init(&self, _input: &mut InputInfo, _config: &mut HashMap<String, Bson>) {}
+    fn init(&self, _input: &mut InputInfo, _config: &mut HashMap<String, Value>) {}
 
     fn load(
         &self,
         context: &mut TemplateContext,
         input: &mut InputInfo,
-        _config: &mut HashMap<String, Bson>,
+        _config: &mut HashMap<String, Value>,
     ) {
         if !input.is_item_fn {
             panic!("不支持在该语法块上使用knife_router注解");
@@ -69,15 +69,17 @@ impl MacroTrait for KnifeServerMacro {
                     });
                 }
             "#,
-            vec!["env_vars", "crate_builtin_name", "boot_type", "block_quote"].map(|x|x.to_string()),
+            vec!["env_vars", "crate_builtin_name", "boot_type", "block_quote"]
+                .map(|x| x.to_string()),
         );
         context.insert_invoker(
             "env_vars",
-            Box::new(|ctx| -> Bson {
-                bson!({
+            Box::new(|ctx| -> Value {
+                json!({
                     "knife_project_id":     ctx.get_string("project"),
                     "knife_application_id": ctx.get_string("application")
                 })
+                .as_value()
             }),
         );
     }

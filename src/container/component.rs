@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use crate::base::{create_derive_attribute_from, InputInfo, MacroTrait};
 use darling::{FromMeta, ToTokens};
 use knife_util::{
-    crates::bson::{bson, Bson},
-    ContextExt, TemplateContext, TemplateContextExt, VecExt,
+    crates::serde_json::json, ContextExt, TemplateContext, TemplateContextExt, Value,
+    ValueConvertExt, VecExt,
 };
 
 /// 过程宏定义参数
@@ -23,17 +23,17 @@ pub(crate) struct KnifeComponentMacro {
 }
 
 impl MacroTrait for KnifeComponentMacro {
-    fn config(&self, config: &mut HashMap<String, Bson>) {
+    fn config(&self, config: &mut HashMap<String, Value>) {
         config.insert_bool("with_item_struct", true);
     }
 
-    fn init(&self, _input: &mut InputInfo, _config: &mut HashMap<String, Bson>) {}
+    fn init(&self, _input: &mut InputInfo, _config: &mut HashMap<String, Value>) {}
 
     fn load(
         &self,
         context: &mut TemplateContext,
         input: &mut InputInfo,
-        _config: &mut HashMap<String, Bson>,
+        _config: &mut HashMap<String, Value>,
     ) {
         if !input.is_item_struct {
             panic!("不支持在该语法块上使用knife_component注解");
@@ -83,7 +83,7 @@ impl MacroTrait for KnifeComponentMacro {
             let struct_attrs =
                 create_derive_attribute_from(&input.item_struct.as_ref().unwrap().attrs, "Default")
                     .map(|x| x.to_token_stream().to_string());
-            context.insert_bson("origin_struct_attrs_quote", bson!(struct_attrs));
+            context.insert_value("origin_struct_attrs_quote", json!(struct_attrs).as_value());
         } else {
             let struct_attrs = &input
                 .item_struct
@@ -91,7 +91,7 @@ impl MacroTrait for KnifeComponentMacro {
                 .unwrap()
                 .attrs
                 .map(|x| x.to_token_stream().to_string());
-            context.insert_bson("origin_struct_attrs_quote", bson!(struct_attrs));
+            context.insert_value("origin_struct_attrs_quote", json!(struct_attrs).as_value());
         }
         context.insert_string(
             "origin_struct_quote",
@@ -173,6 +173,7 @@ impl MacroTrait for KnifeComponentMacro {
                         target: {{ident}}::{{generate_method}}(),
                         inited: false,
                     });
+                    tracing::trace!("注册到容器:{{name}}",);
                 }
             "#,
             vec!["origin_struct_attrs_quote","origin_struct_quote","ident","scope","name","generate_method","target_method","init","async_init","crate_builtin_name"].map(|x|x.to_string()),
