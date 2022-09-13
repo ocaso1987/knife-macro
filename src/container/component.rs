@@ -1,12 +1,17 @@
 //!　普通容器注册
 use std::collections::HashMap;
 
-use crate::base::{create_derive_attribute_from, InputInfo, MacroTrait};
 use darling::{FromMeta, ToTokens};
 use knife_util::{
-    crates::serde_json::json, ContextExt, TemplateContext, TemplateContextExt, Value,
-    ValueConvertExt, VecExt,
+    context::ContextExt,
+    crates::serde_json::json,
+    template::{ContextType, TemplateContextExt},
+    types::VecExt,
+    value::ConvertExt,
+    value::Value,
 };
+
+use crate::base::base::{create_derive_attribute_from, InputInfo, MacroTrait};
 
 /// 过程宏定义参数
 #[derive(FromMeta)]
@@ -23,20 +28,14 @@ pub(crate) struct KnifeComponentMacro {
 }
 
 impl MacroTrait for KnifeComponentMacro {
-    fn config(&self, config: &mut HashMap<String, Value>) {
-        config.insert_bool("with_item_struct", true);
-    }
-
-    fn init(&self, _input: &mut InputInfo, _config: &mut HashMap<String, Value>) {}
-
     fn load(
         &self,
-        context: &mut TemplateContext,
+        context: &mut HashMap<String, ContextType>,
         input: &mut InputInfo,
         _config: &mut HashMap<String, Value>,
     ) {
         if !input.is_item_struct {
-            panic!("不支持在该语法块上使用knife_component注解");
+            panic!("不支持在该语法块上使用knife_component宏");
         }
         let generate_method = self
             .generate_method
@@ -120,7 +119,7 @@ impl MacroTrait for KnifeComponentMacro {
         );
     }
 
-    fn process(&self, context: &mut TemplateContext, _input: &mut InputInfo) {
+    fn process(&self, context: &mut HashMap<String, ContextType>, _input: &mut InputInfo) {
         context.insert_template(
             "result",
             r#"
@@ -141,8 +140,8 @@ impl MacroTrait for KnifeComponentMacro {
                     }
                 }
                 {{crate_builtin_name}}::crates::lazy_static::lazy_static! {
-                    static ref {{ident}}__HOLDER_INSTANCE: {{crate_builtin_name}}::util::AnyRef = {
-                        {{crate_builtin_name}}::util::AnyRef::new({{crate_builtin_name}}::get_{{scope}}::<{{ident}}__Holder>("component".to_string(),"{{name}}".to_string()).unwrap())
+                    static ref {{ident}}__HOLDER_INSTANCE: {{crate_builtin_name}}::util::any::AnyRef = {
+                        {{crate_builtin_name}}::util::any::AnyRef::new({{crate_builtin_name}}::get_{{scope}}::<{{ident}}__Holder>("component".to_string(),"{{name}}".to_string()).unwrap())
                     };
                 }
                 struct {{ident}}__Holder {
@@ -176,7 +175,8 @@ impl MacroTrait for KnifeComponentMacro {
                     tracing::trace!("注册到容器:{{name}}",);
                 }
             "#,
-            vec!["origin_struct_attrs_quote","origin_struct_quote","ident","scope","name","generate_method","target_method","init","async_init","crate_builtin_name"].map(|x|x.to_string()),
+            vec!["origin_struct_attrs_quote","origin_struct_quote","ident","scope","name","generate_method","target_method",
+            "init","async_init","crate_builtin_name"].map(|x|x.to_string()),
         );
     }
 }
