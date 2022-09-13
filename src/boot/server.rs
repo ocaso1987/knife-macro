@@ -1,12 +1,17 @@
 //!　服务器方式启动
 use std::collections::HashMap;
 
-use crate::base::{InputInfo, MacroTrait};
 use darling::{FromMeta, ToTokens};
 use knife_util::{
-    crates::serde_json::json, ContextExt, TemplateContext, TemplateContextExt, Value,
-    ValueConvertExt, VecExt,
+    context::ContextExt,
+    crates::serde_json::json,
+    template::{ContextType, TemplateContextExt},
+    types::VecExt,
+    value::ConvertExt,
+    value::Value,
 };
+
+use crate::base::base::{InputInfo, MacroTrait};
 
 /// 过程宏定义参数
 #[derive(FromMeta)]
@@ -18,20 +23,14 @@ pub(crate) struct KnifeServerMacro {
 }
 
 impl MacroTrait for KnifeServerMacro {
-    fn config(&self, config: &mut HashMap<String, Value>) {
-        config.insert_bool("with_item_fn", true);
-    }
-
-    fn init(&self, _input: &mut InputInfo, _config: &mut HashMap<String, Value>) {}
-
     fn load(
         &self,
-        context: &mut TemplateContext,
+        context: &mut HashMap<String, ContextType>,
         input: &mut InputInfo,
         _config: &mut HashMap<String, Value>,
     ) {
         if !input.is_item_fn {
-            panic!("不支持在该语法块上使用knife_router注解");
+            panic!("不支持在该语法块上使用knife_router宏");
         }
         context.insert_string("project", self.project.to_string());
         context.insert_string("application", self.application.to_string());
@@ -56,7 +55,7 @@ impl MacroTrait for KnifeServerMacro {
         );
     }
 
-    fn process(&self, context: &mut TemplateContext, _input: &mut InputInfo) {
+    fn process(&self, context: &mut HashMap<String, ContextType>, _input: &mut InputInfo) {
         context.insert_template(
             "result",
             r#"

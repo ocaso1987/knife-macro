@@ -1,12 +1,17 @@
 //! 路由注册
 use std::collections::HashMap;
 
-use crate::base::{InputInfo, MacroTrait};
 use darling::{FromMeta, ToTokens};
 use knife_util::{
-    crates::serde_json::json, ContextExt, TemplateContext, TemplateContextExt, Value,
-    ValueConvertExt, VecExt,
+    context::ContextExt,
+    crates::serde_json::json,
+    template::{ContextType, TemplateContextExt},
+    types::VecExt,
+    value::ConvertExt,
+    value::Value,
 };
+
+use crate::base::base::{InputInfo, MacroTrait};
 
 /// 过程宏定义参数
 #[derive(FromMeta)]
@@ -18,20 +23,14 @@ pub(crate) struct KnifeRouterMacro {
 }
 
 impl MacroTrait for KnifeRouterMacro {
-    fn config(&self, config: &mut HashMap<String, Value>) {
-        config.insert_bool("with_item_fn", true);
-    }
-
-    fn init(&self, _input: &mut InputInfo, _config: &mut HashMap<String, Value>) {}
-
     fn load(
         &self,
-        context: &mut TemplateContext,
+        context: &mut HashMap<String, ContextType>,
         input: &mut InputInfo,
         _config: &mut HashMap<String, Value>,
     ) {
         if !input.is_item_fn {
-            panic!("不支持在该语法块上使用knife_router注解");
+            panic!("不支持在该语法块上使用knife_router宏");
         }
         let method = self
             .method
@@ -80,11 +79,7 @@ impl MacroTrait for KnifeRouterMacro {
         );
     }
 
-    fn process(
-        &self,
-        context: &mut HashMap<String, knife_util::ContextType>,
-        _input: &mut InputInfo,
-    ) {
+    fn process(&self, context: &mut HashMap<String, ContextType>, _input: &mut InputInfo) {
         context.insert_template(
             "result",
             r#"
@@ -93,8 +88,8 @@ impl MacroTrait for KnifeRouterMacro {
                 {{/each}}
                 {{{origin_fn_quote}}}
                 {{crate_builtin_name}}::crates::lazy_static::lazy_static! {
-                    static ref {{ident}}__HOLDER_INSTANCE: {{crate_builtin_name}}::util::AnyRef = {
-                        {{crate_builtin_name}}::util::AnyRef::new({{crate_builtin_name}}::get_{{scope}}::<{{ident}}__Holder>("router".to_string(),"{{name}}".to_string()).unwrap())
+                    static ref {{ident}}__HOLDER_INSTANCE: {{crate_builtin_name}}::util::any::AnyRef = {
+                        {{crate_builtin_name}}::util::any::AnyRef::new({{crate_builtin_name}}::get_{{scope}}::<{{ident}}__Holder>("router".to_string(),"{{name}}".to_string()).unwrap())
                     };
                 }
                 struct {{ident}}__Holder {}
