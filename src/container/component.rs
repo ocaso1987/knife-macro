@@ -3,15 +3,14 @@ use std::collections::HashMap;
 
 use darling::{FromMeta, ToTokens};
 use knife_util::{
-    context::ContextExt,
-    crates::serde_json::json,
+    context::ContextTrait,
+    crates_builtin::serde_json::json,
+    iter::VecExt,
     template::{ContextType, TemplateContextExt},
-    types::VecExt,
-    value::ConvertExt,
-    value::Value,
+    Value,
 };
 
-use crate::base::base::{create_derive_attribute_from, InputInfo, MacroTrait};
+use crate::base::main::{create_derive_attribute_from, InputInfo, MacroTrait};
 
 /// 过程宏定义参数
 #[derive(FromMeta)]
@@ -42,81 +41,105 @@ impl MacroTrait for KnifeComponentMacro {
             .as_ref()
             .unwrap_or(&"default".to_string())
             .to_string();
-        context.insert_string("name", self.name.to_string());
-        context.insert_string(
-            "scope",
-            self.scope
-                .as_ref()
-                .unwrap_or(&"global".to_string())
-                .to_string(),
-        );
-        context.insert_string("generate_method", generate_method.to_string());
-        context.insert_string(
-            "target_method",
-            self.target_method
-                .as_ref()
-                .unwrap_or(&"get_instance".to_string())
-                .to_string(),
-        );
-        context.insert_bool("crate_dryrun", self.crate_dryrun.unwrap_or(false));
-        context.insert_string(
-            "crate_builtin_name",
-            self.crate_builtin_name
-                .as_ref()
-                .unwrap_or(&"knife_framework".to_string())
-                .to_string(),
-        );
-        context.insert_string(
-            "init",
-            self.init.as_ref().unwrap_or(&"".to_string()).to_string(),
-        );
-        context.insert_string(
-            "async_init",
-            self.async_init
-                .as_ref()
-                .unwrap_or(&"".to_string())
-                .to_string(),
-        );
+        context
+            .insert_string("name", self.name.to_string())
+            .unwrap();
+        context
+            .insert_string(
+                "scope",
+                self.scope
+                    .as_ref()
+                    .unwrap_or(&"global".to_string())
+                    .to_string(),
+            )
+            .unwrap();
+        context
+            .insert_string("generate_method", generate_method.to_string())
+            .unwrap();
+        context
+            .insert_string(
+                "target_method",
+                self.target_method
+                    .as_ref()
+                    .unwrap_or(&"get_instance".to_string())
+                    .to_string(),
+            )
+            .unwrap();
+        context
+            .insert_bool("crate_dryrun", self.crate_dryrun.unwrap_or(false))
+            .unwrap();
+        context
+            .insert_string(
+                "crate_builtin_name",
+                self.crate_builtin_name
+                    .as_ref()
+                    .unwrap_or(&"::knife_framework".to_string())
+                    .to_string(),
+            )
+            .unwrap();
+        context
+            .insert_string(
+                "init",
+                self.init.as_ref().unwrap_or(&"".to_string()).to_string(),
+            )
+            .unwrap();
+        context
+            .insert_string(
+                "async_init",
+                self.async_init
+                    .as_ref()
+                    .unwrap_or(&"".to_string())
+                    .to_string(),
+            )
+            .unwrap();
 
-        if "default" == generate_method.to_string() {
+        if "default" == generate_method {
             let struct_attrs =
                 create_derive_attribute_from(&input.item_struct.as_ref().unwrap().attrs, "Default")
-                    .map(|x| x.to_token_stream().to_string());
-            context.insert_value("origin_struct_attrs_quote", json!(struct_attrs).as_value());
+                    .map_collect(|x| x.to_token_stream().to_string());
+            context
+                .insert_json("origin_struct_attrs_quote", &json!(struct_attrs))
+                .unwrap();
         } else {
             let struct_attrs = &input
                 .item_struct
                 .as_ref()
                 .unwrap()
                 .attrs
-                .map(|x| x.to_token_stream().to_string());
-            context.insert_value("origin_struct_attrs_quote", json!(struct_attrs).as_value());
+                .map_collect(|x| x.to_token_stream().to_string());
+            context
+                .insert_json("origin_struct_attrs_quote", &json!(struct_attrs))
+                .unwrap();
         }
-        context.insert_string(
-            "origin_struct_quote",
-            format!(
-                "{} {} {} {}",
-                input.item_struct.as_ref().unwrap().vis.to_token_stream(),
+        context
+            .insert_string(
+                "origin_struct_quote",
+                format!(
+                    "{} {} {} {}",
+                    input.item_struct.as_ref().unwrap().vis.to_token_stream(),
+                    input
+                        .item_struct
+                        .as_ref()
+                        .unwrap()
+                        .struct_token
+                        .to_token_stream(),
+                    input.item_struct.as_ref().unwrap().ident.to_token_stream(),
+                    input.item_struct.as_ref().unwrap().fields.to_token_stream()
+                ),
+            )
+            .unwrap();
+        context
+            .insert_string(
+                "ident",
                 input
                     .item_struct
                     .as_ref()
                     .unwrap()
-                    .struct_token
-                    .to_token_stream(),
-                input.item_struct.as_ref().unwrap().ident.to_token_stream(),
-                input.item_struct.as_ref().unwrap().fields.to_token_stream()
-            ),
-        );
-        context.insert_string(
-            "ident",
-            input
-                .item_struct
-                .as_ref()
-                .unwrap()
-                .ident
-                .to_token_stream()
-                .to_string(),
-        );
+                    .ident
+                    .to_token_stream()
+                    .to_string(),
+            )
+            .unwrap();
     }
 
     fn process(&self, context: &mut HashMap<String, ContextType>, _input: &mut InputInfo) {
@@ -129,12 +152,12 @@ impl MacroTrait for KnifeComponentMacro {
                 {{{origin_struct_quote}}}
                 impl {{ident}} {
                     pub fn {{target_method}}() -> &'static mut Self {
-                        let holder = {{ident}}__HOLDER_INSTANCE.as_mut::<{{ident}}__Holder>();
+                        let holder = {{ident}}__HOLDER_INSTANCE.to_mut::<{{ident}}__Holder>();
                         holder.init();
                         &mut holder.target
                     }
                     pub async fn {{target_method}}_async() -> &'static mut Self {
-                        let holder = {{ident}}__HOLDER_INSTANCE.as_mut::<{{ident}}__Holder>();
+                        let holder = {{ident}}__HOLDER_INSTANCE.to_mut::<{{ident}}__Holder>();
                         holder.init_async().await;
                         &mut holder.target
                     }
@@ -161,9 +184,9 @@ impl MacroTrait for KnifeComponentMacro {
                     }
                 }
                 impl {{crate_builtin_name}}::ComponentTrait for {{ident}}__Holder {}
-                impl Into<{{crate_builtin_name}}::Component> for {{ident}}__Holder {
-                    fn into(self) -> {{crate_builtin_name}}::Component {
-                        {{crate_builtin_name}}::Component::COMPONENT(Box::new(self))
+                impl From<{{ident}}__Holder> for {{crate_builtin_name}}::Component {
+                    fn from(v:{{ident}}__Holder) -> Self {
+                        {{crate_builtin_name}}::Component::COMPONENT(Box::new(v))
                     }
                 }
                 #[{{crate_builtin_name}}::crates::ctor::ctor]
@@ -176,7 +199,7 @@ impl MacroTrait for KnifeComponentMacro {
                 }
             "#,
             vec!["origin_struct_attrs_quote","origin_struct_quote","ident","scope","name","generate_method","target_method",
-            "init","async_init","crate_builtin_name"].map(|x|x.to_string()),
+            "init","async_init","crate_builtin_name"].map_collect(|x|x.to_string()),
         );
     }
 }

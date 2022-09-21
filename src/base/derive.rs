@@ -1,8 +1,8 @@
-use super::base::{InputInfo, MacroTrait};
+use super::main::{InputInfo, MacroTrait};
 use knife_util::{
-    context::ContextExt,
+    context::ContextTrait,
     template::{render_template_recursion, ContextType},
-    value::Value,
+    Value,
 };
 use std::{collections::HashMap, str::FromStr};
 
@@ -15,14 +15,14 @@ pub(crate) fn knife_derive_main<T>(
 where
     T: MacroTrait + Default,
 {
-    let macro_target: T = Default::default();
+    let mut macro_target: T = Default::default();
     macro_target.config(config);
     macro_target.init(input, config);
     macro_target.load(context, input, config);
     macro_target.process(context, input);
 
-    let result_quote = render_template_recursion(&context, "result").unwrap().0;
-    let crate_dryrun = context.get_bool("crate_dryrun");
+    let result_quote = render_template_recursion(context, "result").unwrap().0;
+    let crate_dryrun = context.get_bool("crate_dryrun").unwrap();
     if crate_dryrun {
         println!("-------------------------------------------------------------------------");
         println!("{}", result_quote);
