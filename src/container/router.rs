@@ -3,15 +3,14 @@ use std::collections::HashMap;
 
 use darling::{FromMeta, ToTokens};
 use knife_util::{
-    context::ContextExt,
-    crates::serde_json::json,
+    context::ContextTrait,
+    crates_builtin::serde_json::json,
+    iter::VecExt,
     template::{ContextType, TemplateContextExt},
-    types::VecExt,
-    value::ConvertExt,
-    value::Value,
+    Value,
 };
 
-use crate::base::base::{InputInfo, MacroTrait};
+use crate::base::main::{InputInfo, MacroTrait};
 
 /// 过程宏定义参数
 #[derive(FromMeta)]
@@ -37,46 +36,62 @@ impl MacroTrait for KnifeRouterMacro {
             .as_ref()
             .unwrap_or(&"POST".to_string())
             .to_uppercase();
-        context.insert_string("path", self.path.to_string());
-        context.insert_string("method", method.to_string());
-        context.insert_string("name", format!("{}:{}", method.to_string(), self.path));
-        context.insert_string("scope", "global".to_string());
-        context.insert_bool("crate_dryrun", self.crate_dryrun.unwrap_or(false));
-        context.insert_string(
-            "crate_builtin_name",
-            self.crate_builtin_name
-                .as_ref()
-                .unwrap_or(&"knife_framework".to_string())
-                .to_string(),
-        );
+        context
+            .insert_string("path", self.path.to_string())
+            .unwrap();
+        context.insert_string("method", method.to_string()).unwrap();
+        context
+            .insert_string("name", format!("{}:{}", method, self.path))
+            .unwrap();
+        context
+            .insert_string("scope", "global".to_string())
+            .unwrap();
+        context
+            .insert_bool("crate_dryrun", self.crate_dryrun.unwrap_or(false))
+            .unwrap();
+        context
+            .insert_string(
+                "crate_builtin_name",
+                self.crate_builtin_name
+                    .as_ref()
+                    .unwrap_or(&"::knife_framework".to_string())
+                    .to_string(),
+            )
+            .unwrap();
 
         let fn_attrs = &input
             .item_fn
             .as_ref()
             .unwrap()
             .attrs
-            .map(|x| x.to_token_stream().to_string());
-        context.insert_value("origin_fn_attrs_quote", json!(fn_attrs).as_value());
-        context.insert_string(
-            "origin_fn_quote",
-            format!(
-                "{} {} {}",
-                input.item_fn.as_ref().unwrap().vis.to_token_stream(),
-                input.item_fn.as_ref().unwrap().sig.to_token_stream(),
-                input.item_fn.as_ref().unwrap().block.to_token_stream()
-            ),
-        );
-        context.insert_string(
-            "ident",
-            input
-                .item_fn
-                .as_ref()
-                .unwrap()
-                .sig
-                .ident
-                .to_token_stream()
-                .to_string(),
-        );
+            .map_collect(|x| x.to_token_stream().to_string());
+        context
+            .insert_json("origin_fn_attrs_quote", &json!(fn_attrs))
+            .unwrap();
+        context
+            .insert_string(
+                "origin_fn_quote",
+                format!(
+                    "{} {} {}",
+                    input.item_fn.as_ref().unwrap().vis.to_token_stream(),
+                    input.item_fn.as_ref().unwrap().sig.to_token_stream(),
+                    input.item_fn.as_ref().unwrap().block.to_token_stream()
+                ),
+            )
+            .unwrap();
+        context
+            .insert_string(
+                "ident",
+                input
+                    .item_fn
+                    .as_ref()
+                    .unwrap()
+                    .sig
+                    .ident
+                    .to_token_stream()
+                    .to_string(),
+            )
+            .unwrap();
     }
 
     fn process(&self, context: &mut HashMap<String, ContextType>, _input: &mut InputInfo) {
@@ -96,12 +111,15 @@ impl MacroTrait for KnifeRouterMacro {
                 #[{{crate_builtin_name}}::crates::async_trait::async_trait]
                 impl {{crate_builtin_name}}::RouterTrait for {{ident}}__Holder {
                     async fn router_handle(&self, req: {{crate_builtin_name}}::HyperRequest) -> {{crate_builtin_name}}::HyperResponse {
-                        {{crate_builtin_name}}::HyperResponse::from({{ident}}({{crate_builtin_name}}::HyperRequest::into(req)).await)
+                        let hyper_req = {{crate_builtin_name}}::util::future::AsyncInto::async_into(req).await;
+                        let resp = {{ident}}(hyper_req).await;
+                        let hyper_resp = {{crate_builtin_name}}::util::future::AsyncFrom::async_from((resp, "{{name}}".to_string())).await;
+                        hyper_resp
                     }
                 }
-                impl Into<{{crate_builtin_name}}::Component> for {{ident}}__Holder {
-                    fn into(self) -> {{crate_builtin_name}}::Component {
-                        {{crate_builtin_name}}::Component::ROUTER(Box::new(self))
+                impl From<{{ident}}__Holder> for {{crate_builtin_name}}::Component {
+                    fn from(v:{{ident}}__Holder) -> Self {
+                        {{crate_builtin_name}}::Component::ROUTER(Box::new(v))
                     }
                 }
                 #[{{crate_builtin_name}}::crates::ctor::ctor]
@@ -110,7 +128,7 @@ impl MacroTrait for KnifeRouterMacro {
                     ::tracing::trace!("注册到路由:{{name}}",);
                 }
             "#,
-            vec!["origin_fn_attrs_quote","origin_fn_quote","ident","scope","name","crate_builtin_name"].map(|x|x.to_string()),
+            vec!["origin_fn_attrs_quote","origin_fn_quote","ident","scope","name","crate_builtin_name"].map_collect(|x|x.to_string()),
         );
     }
 }
