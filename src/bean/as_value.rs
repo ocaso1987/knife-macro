@@ -9,9 +9,9 @@ use knife_util::{
 use crate::base::main::{InputInfo, MacroTrait};
 
 #[derive(Default)]
-pub(crate) struct MergeValueDerive {}
+pub(crate) struct AsValueDerive {}
 
-impl MacroTrait for MergeValueDerive {
+impl MacroTrait for AsValueDerive {
     fn load(
         &self,
         context: &mut HashMap<String, ContextType>,
@@ -19,7 +19,7 @@ impl MacroTrait for MergeValueDerive {
         _config: &mut HashMap<String, Value>,
     ) {
         if !input.is_item_struct {
-            panic!("不支持在该语法块上使用MergeValue宏");
+            panic!("不支持在该语法块上使用AsValue宏");
         }
         context.insert_bool("crate_dryrun", false).unwrap();
         context
@@ -49,14 +49,21 @@ impl MacroTrait for MergeValueDerive {
         context.insert_template(
             "result",
             r#"
-            impl {{crate_builtin_name}}::util::bean::MergeValueTrait for {{struct_name}} {
-                fn merge_value(&mut self, target: Option<&{{crate_builtin_name}}::util::Value>) -> {{crate_builtin_name}}::util::Result<Self> {
+            impl {{crate_builtin_name}}::util::bean::AsValueTrait for {{struct_name}} {
+                fn as_value(&self) -> {{crate_builtin_name}}::util::Result<{{@root.crate_builtin_name}}::util::Value> {
+                    let mut map = std::collections::BTreeMap::<String, {{crate_builtin_name}}::util::Value>::new();
                     {{#each field_name_list}}
-                    if let Some(v) = target {
-                        self.{{this}} = {{@root.crate_builtin_name}}::util::bean::MergeValueTrait::merge_value(&mut self.{{this}}, {{@root.crate_builtin_name}}::util::context::ContextTrait::get_value(v, "{{this}}").unwrap()).unwrap();
-                    }
+                    match {{@root.crate_builtin_name}}::util::bean::AsValueTrait::as_value(&self.{{this}}) {
+                        Ok(v) => match v{
+                            {{@root.crate_builtin_name}}::util::Value::Null => {},
+                            _=> {
+                                map.insert("{{this}}".to_string(), v);
+                            }
+                        },
+                        Err(e) => return Err(e),
+                    };
                     {{/each}}
-                    {{crate_builtin_name}}::util::OK(self.clone())
+                    {{crate_builtin_name}}::util::OK({{crate_builtin_name}}::util::Value::Object(map))
                 }
             }
             "#,

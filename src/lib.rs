@@ -7,6 +7,7 @@ pub(crate) mod base {
     pub(crate) mod main;
 }
 pub(crate) mod bean {
+    pub(crate) mod as_value;
     pub(crate) mod merge_value;
 }
 pub(crate) mod boot {
@@ -26,7 +27,7 @@ pub(crate) mod service {
 }
 
 use base::{attribute::knife_attribute_main, derive::knife_derive_main, main::InputInfo};
-use bean::merge_value::MergeValueDerive;
+use bean::{as_value::AsValueDerive, merge_value::MergeValueDerive};
 use boot::server::KnifeServerMacro;
 use container::{component::KnifeComponentMacro, router::KnifeRouterMacro};
 use enums::enum_name::EnumNameDerive;
@@ -169,4 +170,16 @@ pub fn derive_merge_value(input: TokenStream) -> TokenStream {
     input_info.is_item_struct = true;
 
     knife_derive_main::<MergeValueDerive>(input_info, &mut HashMap::new(), &mut HashMap::new())
+}
+
+/// 为实体类转换Value派生宏，为结构体生成as_value方法
+#[proc_macro_derive(AsValue, attributes(knife_option))]
+pub fn derive_as_value(input: TokenStream) -> TokenStream {
+    let input_info = &mut InputInfo::default();
+    let _ = input_info.input_source.insert((&input).to_string());
+    let item_enum = syn::parse_macro_input::parse::<ItemStruct>(input).unwrap();
+    let _ = input_info.item_struct.insert(item_enum);
+    input_info.is_item_struct = true;
+
+    knife_derive_main::<AsValueDerive>(input_info, &mut HashMap::new(), &mut HashMap::new())
 }

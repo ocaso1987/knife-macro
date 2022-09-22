@@ -6,7 +6,6 @@ use knife_util::{
     bean::AsValueTrait,
     context::ContextTrait,
     crates_builtin::serde_json::json,
-    iter::VecExt,
     template::{ContextType, TemplateContextExt},
     Value,
 };
@@ -81,7 +80,9 @@ impl MacroTrait for KnifeServerMacro {
                 }
             "#,
             vec!["env_vars", "boot_type", "block_quote", "crate_builtin_name"]
-                .map_collect(|x| x.to_string()),
+                .iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<String>>(),
         );
         context.insert_invoker(
             "env_vars",

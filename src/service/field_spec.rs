@@ -5,7 +5,6 @@ use darling::{FromMeta, ToTokens};
 use knife_util::{
     context::ContextTrait,
     crates_builtin::serde_json::json,
-    iter::VecExt,
     template::{ContextType, TemplateContextExt},
     Value,
 };
@@ -55,7 +54,9 @@ impl MacroTrait for FieldSpecMacro {
             .as_ref()
             .unwrap()
             .attrs
-            .map_collect(|x| x.to_token_stream().to_string());
+            .iter()
+            .map(|x| x.to_token_stream().to_string())
+            .collect::<Vec<String>>();
         context
             .insert_json("origin_fn_attrs_quote", &json!(fn_attrs))
             .unwrap();
@@ -125,7 +126,9 @@ impl MacroTrait for FieldSpecMacro {
                 "target_name",
                 "config",
             ]
-            .map_collect(|x| x.to_string()),
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>(),
         );
     }
 

@@ -1,6 +1,6 @@
 [package]
 name = "knife-macro"
-version = "0.1.6"
+version = "0.1.7"
 authors = ["ocaso <ocaso1987@qq.com>"]
 description = "Knife框架公共宏定义"
 repository = "https://github.com/ocaso1987/knife-macro/"
@@ -11,7 +11,7 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-knife-util = "0.1.6"
+knife-util = "0.1.7"
 darling = "0.14.1"
 proc-macro2 = "1.0.43"
 quote = "1.0.21"
