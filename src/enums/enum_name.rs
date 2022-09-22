@@ -5,7 +5,6 @@ use knife_util::{
     bean::AsValueTrait,
     context::ContextTrait,
     crates_builtin::serde_json::json,
-    iter::VecExt,
     template::{ContextType, TemplateContextExt},
     Value,
 };
@@ -95,7 +94,10 @@ impl MacroTrait for EnumNameDerive {
                     }
                 }
             "#,
-            vec!["enum_name", "generics_quote", "enum_variants"].map_collect(|x| x.to_string()),
+            vec!["enum_name", "generics_quote", "enum_variants"]
+                .iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<String>>(),
         );
     }
 }

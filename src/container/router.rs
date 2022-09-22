@@ -5,7 +5,6 @@ use darling::{FromMeta, ToTokens};
 use knife_util::{
     context::ContextTrait,
     crates_builtin::serde_json::json,
-    iter::VecExt,
     template::{ContextType, TemplateContextExt},
     Value,
 };
@@ -64,7 +63,9 @@ impl MacroTrait for KnifeRouterMacro {
             .as_ref()
             .unwrap()
             .attrs
-            .map_collect(|x| x.to_token_stream().to_string());
+            .iter()
+            .map(|x| x.to_token_stream().to_string())
+            .collect::<Vec<String>>();
         context
             .insert_json("origin_fn_attrs_quote", &json!(fn_attrs))
             .unwrap();
@@ -128,7 +129,7 @@ impl MacroTrait for KnifeRouterMacro {
                     ::tracing::trace!("注册到路由:{{name}}",);
                 }
             "#,
-            vec!["origin_fn_attrs_quote","origin_fn_quote","ident","scope","name","crate_builtin_name"].map_collect(|x|x.to_string()),
+            vec!["origin_fn_attrs_quote","origin_fn_quote","ident","scope","name","crate_builtin_name"].iter().map(|x|x.to_string()).collect::<Vec<String>>(),
         );
     }
 }

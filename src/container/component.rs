@@ -5,7 +5,6 @@ use darling::{FromMeta, ToTokens};
 use knife_util::{
     context::ContextTrait,
     crates_builtin::serde_json::json,
-    iter::VecExt,
     template::{ContextType, TemplateContextExt},
     Value,
 };
@@ -96,7 +95,9 @@ impl MacroTrait for KnifeComponentMacro {
         if "default" == generate_method {
             let struct_attrs =
                 create_derive_attribute_from(&input.item_struct.as_ref().unwrap().attrs, "Default")
-                    .map_collect(|x| x.to_token_stream().to_string());
+                    .iter()
+                    .map(|x| x.to_token_stream().to_string())
+                    .collect::<Vec<String>>();
             context
                 .insert_json("origin_struct_attrs_quote", &json!(struct_attrs))
                 .unwrap();
@@ -106,7 +107,9 @@ impl MacroTrait for KnifeComponentMacro {
                 .as_ref()
                 .unwrap()
                 .attrs
-                .map_collect(|x| x.to_token_stream().to_string());
+                .iter()
+                .map(|x| x.to_token_stream().to_string())
+                .collect::<Vec<String>>();
             context
                 .insert_json("origin_struct_attrs_quote", &json!(struct_attrs))
                 .unwrap();
@@ -199,7 +202,7 @@ impl MacroTrait for KnifeComponentMacro {
                 }
             "#,
             vec!["origin_struct_attrs_quote","origin_struct_quote","ident","scope","name","generate_method","target_method",
-            "init","async_init","crate_builtin_name"].map_collect(|x|x.to_string()),
+            "init","async_init","crate_builtin_name"].iter().map(|x|x.to_string()).collect::<Vec<String>>(),
         );
     }
 }
